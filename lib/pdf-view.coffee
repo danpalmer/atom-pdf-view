@@ -3,7 +3,7 @@ fs = require 'fs'
 require '../pdfjs/pdf'
 # require '../pdfjs/pdf.worker'
 
-scale = 1.0
+scale = 1.5
 
 module.exports =
 class PdfView extends ScrollView
@@ -37,19 +37,16 @@ class PdfView extends ScrollView
     @container.height(canvas.height)
     @container.width(canvas.width)
 
-    scale = this.scale()
+    scale = window.devicePixelRatio
 
     if scale != 1
-      cssScale = "scale(#{1/scale}, #{1/scale})"
-      @canvas.css('transform', cssScale)
-      @canvas.css('transform-origin', '0% 0%')
-      canvas.height *= scale
-      canvas.width *= scale
-    else
-
-    context._scaleX = scale
-    context._scaleY = scale
-    context.scale(scale, scale)
+      oldWidth = canvas.width
+      oldHeight = canvas.height
+      canvas.width = oldWidth * scale
+      canvas.height = oldHeight * scale
+      canvas.style.width = oldWidth + 'px'
+      canvas.style.height = oldHeight + 'px'
+      context.scale(scale, scale)
 
     page.render { canvasContext: context, viewport: viewport }
 
@@ -61,6 +58,3 @@ class PdfView extends ScrollView
       i++
       view[i] = buf[i]
     return view
-
-  scale: () ->
-    window.devicePixelRatio
