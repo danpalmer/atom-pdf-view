@@ -37,6 +37,20 @@ class PdfView extends ScrollView
     @container.height(canvas.height)
     @container.width(canvas.width)
 
+    scale = this.scale()
+
+    if scale != 1
+      cssScale = "scale(#{1/scale}, #{1/scale})"
+      @canvas.css('transform', cssScale)
+      @canvas.css('transform-origin', '0% 0%')
+      canvas.height *= scale
+      canvas.width *= scale
+    else
+
+    context._scaleX = scale
+    context._scaleY = scale
+    context.scale(scale, scale)
+
     page.render { canvasContext: context, viewport: viewport }
 
   bufferToUint8Array: (buf) ->
@@ -47,3 +61,6 @@ class PdfView extends ScrollView
       i++
       view[i] = buf[i]
     return view
+
+  scale: () ->
+    window.devicePixelRatio
