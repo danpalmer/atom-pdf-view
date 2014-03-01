@@ -1,19 +1,27 @@
 {$, ScrollView} = require 'atom'
 fs = require 'fs'
 require '../pdfjs/pdf'
-# require '../pdfjs/pdf.worker'
 
-scale = 1.5
+SCALE = 1.5
+MENUBAR_HEIGHT = 40
 
 module.exports =
 class PdfView extends ScrollView
   @content: ->
     @div class: 'pdf-view', tabindex: 1, =>
-      @div outlet: 'container', class: 'pdf-container', =>
-        @canvas outlet: 'canvas'
+      @div class: 'controls-container', =>
+        @div class: 'controls', outlet: 'controls', =>
+          @div class: 'btn-group', =>
+            @button '+', class: 'btn', outlet: 'zoomIn'
+            @button '-', class: 'btn', outlet: 'zoomOut'
+      @div outlet: 'content', class: 'pdf-content', =>
+        @div outlet: 'container', class: 'pdf-container', =>
+          @ul outlet: 'pages'
 
-  initialize: (editor) ->
+  initialize: (editor) =>
     super
+
+    @currentScale = 1.0
 
     PDFJS.workerSrc = 'atom://pdf-view/pdfjs/pdf.worker.js'
     console.log 'Initializing Editor'
@@ -21,14 +29,33 @@ class PdfView extends ScrollView
       console.log 'Loaded PDF Data'
       PDFJS.getDocument(this.bufferToUint8Array(data)).then(this.renderPdf, console.error)
 
+    @zoomIn.click () =>
+      @currentScale += 0.1
+      this.zoomToScale(@currentScale)
+
+    @zoomOut.click () =>
+      @currentScale -= 0.1
+      this.zoomToScale(@currentScale)
+
+    this.zoomToScale(@currentScale)
+
+    @controls.height(MENUBAR_HEIGHT)
+    $(window).resize () =>
+      @content.height(this.height() - MENUBAR_HEIGHT)
+
   renderPdf: (pdf) =>
     console.log 'Parsed PDF'
-    pdf.getPage(1).then(this.renderPage, console.error)
+    i = 0
+    while i < pdf.pdfInfo.numPages
+      pdf.getPage(i + 1).then (page) =>
+        @pages.append this.renderPage(page)
+      i++
 
   renderPage: (page) =>
     console.log 'Rendering Page'
-    viewport = page.getViewport(scale)
+    viewport = page.getViewport(SCALE)
 
+    @canvas = $('<canvas></canvas>')
     canvas = @canvas[0]
     context = canvas.getContext('2d')
     canvas.height = viewport.height
@@ -49,6 +76,12 @@ class PdfView extends ScrollView
       context.scale(scale, scale)
 
     page.render { canvasContext: context, viewport: viewport }
+    return $('<li>').html(canvas).addClass('pdf-page')
+
+  zoomToScale: (scale) =>
+    @container.css('transform', "scale(#{scale}, #{scale})")
+    offset = 20 + ((scale - 1.0) * 600.0)
+    @container.css('margin-top', "#{offset}px")
 
   bufferToUint8Array: (buf) ->
     ab = new ArrayBuffer(buf.length)

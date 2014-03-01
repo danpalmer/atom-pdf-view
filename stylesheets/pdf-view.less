@@ -6,9 +6,40 @@
 
 .pdf-view {
   width: 100%;
+
+  .controls-container {
+    width: 100%;
+    height: 41px;
+    border-bottom: 1px solid @pane-item-border-color;
+
+    .controls {
+      padding: 5px;
+      background-color: @pane-item-background-color;
+      margin-bottom: 10px;
+      font-weight: bold;
+    }
+  }
+}
+
+.pdf-content {
   overflow: scroll;
+  height: 500px;
 }
 
 .pdf-container {
-  // margin: 10px auto;
+  margin: 0 auto;
+
+  ul {
+    list-style: none;
+    padding-left: 0;
+
+    li {
+      box-shadow: 0 0 20px black;
+      margin-bottom: 20px;
+
+      canvas {
+        margin-bottom: -4px;
+      }
+    }
+  }
 }
